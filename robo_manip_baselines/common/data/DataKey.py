@@ -266,7 +266,7 @@ class DataKey:
 
     @classmethod
     def is_tactile_sensor_key(cls, key):
-        """Check if the key is for depth image."""
+        """Check if the key is for tactile sensor."""
         return key.endswith("_tactile_sensor")
 
     @classmethod
