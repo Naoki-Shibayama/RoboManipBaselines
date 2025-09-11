@@ -72,6 +72,9 @@ def _aggregate_data_seq_with_skip(data_seq, skip, agg_func):
 
 def get_skipped_data_seq(data_seq, key, skip):
     """Get skipped data sequence."""
+    if key in DataKey.TACTILE_SENSOR_KEYS:
+        data_seq = np.array(data_seq).reshape(len(data_seq), -1)
+
     if skip == 1:
         return data_seq
 

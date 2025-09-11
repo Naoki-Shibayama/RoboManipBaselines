@@ -67,6 +67,11 @@ class DataKey:
     # Command velocity of omni-directional mobile base
     COMMAND_MOBILE_OMNI_VEL = "command_mobile_omni_vel"
 
+    # Left tactile sensor (MujocoTactileSensorPlugin is required)
+    LEFT_TACTILE_SENSOR = "left_tactile_sensor"
+    # Left tactile sensor (MujocoTactileSensorPlugin is required)
+    RIGHT_TACTILE_SENSOR = "right_tactile_sensor"
+
     # All keys of measured data
     MEASURED_DATA_KEYS = [
         MEASURED_JOINT_POS,
@@ -95,6 +100,12 @@ class DataKey:
         # COMMAND_EEF_VEL,
         # COMMAND_EEF_WRENCH,
         COMMAND_MOBILE_OMNI_VEL,
+    ]
+
+    # All keys of tactile sensors (MujocoTactileSensorPlugin is required)
+    TACTILE_SENSOR_KEYS = [
+        LEFT_TACTILE_SENSOR,
+        RIGHT_TACTILE_SENSOR,
     ]
 
     @classmethod
@@ -252,6 +263,11 @@ class DataKey:
     def is_pointcloud_key(cls, key):
         """Check if the key is for depth image."""
         return key.endswith("_pointcloud")
+
+    @classmethod
+    def is_tactile_sensor_key(cls, key):
+        """Check if the key is for depth image."""
+        return key.endswith("_tactile_sensor")
 
     @classmethod
     def get_plot_scale(cls, key, env):
