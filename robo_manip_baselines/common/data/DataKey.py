@@ -69,8 +69,13 @@ class DataKey:
 
     # Left tactile sensor (MujocoTactileSensorPlugin is required)
     LEFT_TACTILE_SENSOR = "left_tactile_sensor"
-    # Left tactile sensor (MujocoTactileSensorPlugin is required)
+    # Right tactile sensor (MujocoTactileSensorPlugin is required)
     RIGHT_TACTILE_SENSOR = "right_tactile_sensor"
+
+    # Left tactile sensor with sanwa keyboard
+    TACTILE_LEFT = "tactile_left"
+    # Right tactile sensor with sanwa keyboard
+    TACTILE_RIGHT = "tactile_right"
 
     # All keys of measured data
     MEASURED_DATA_KEYS = [
@@ -106,6 +111,8 @@ class DataKey:
     TACTILE_SENSOR_KEYS = [
         LEFT_TACTILE_SENSOR,
         RIGHT_TACTILE_SENSOR,
+        TACTILE_LEFT,
+        TACTILE_RIGHT,
     ]
 
     @classmethod
@@ -267,7 +274,7 @@ class DataKey:
     @classmethod
     def is_tactile_sensor_key(cls, key):
         """Check if the key is for tactile sensor."""
-        return key.endswith("_tactile_sensor")
+        return key.endswith("_tactile_sensor") or key.startswith("tactile_")
 
     @classmethod
     def get_plot_scale(cls, key, env):
