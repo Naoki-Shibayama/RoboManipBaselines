@@ -48,6 +48,8 @@ class MotionManager:
             return self.get_measured_data(key, obs)
         elif key in DataKey.COMMAND_DATA_KEYS:
             return self.get_command_data(key)
+        elif key in DataKey.TACTILE_SENSOR_KEYS:
+            return self.get_tactile_data_as_state(key)
         else:
             raise ValueError(f"[{self.__class__.__name__}] Invalid data key: {key}")
 
@@ -128,6 +130,10 @@ class MotionManager:
                 command[:] = single_command
 
         return command
+
+    def get_tactile_data_as_state(self, key):
+        info = self.env.unwrapped._get_info()
+        return info["intensity_tactile"][key].reshape(-1)
 
     def draw_markers(self):
         """Draw markers of the current states."""

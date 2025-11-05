@@ -107,7 +107,7 @@ class DataKey:
         COMMAND_MOBILE_OMNI_VEL,
     ]
 
-    # All keys of tactile sensors (MujocoTactileSensorPlugin is required)
+    # All keys of tactile sensors (MujocoTactileSensorPlugin is required for tactile_sensor keys)
     TACTILE_SENSOR_KEYS = [
         LEFT_TACTILE_SENSOR,
         RIGHT_TACTILE_SENSOR,
@@ -173,6 +173,13 @@ class DataKey:
                 return 6 * num_eef
         elif key in (DataKey.MEASURED_MOBILE_OMNI_VEL, DataKey.COMMAND_MOBILE_OMNI_VEL):
             return 3
+        elif key in (
+            DataKey.LEFT_TACTILE_SENSOR,
+            DataKey.RIGHT_TACTILE_SENSOR,
+        ):
+            return [5, 8]
+        elif key in (DataKey.TACTILE_LEFT, DataKey.TACTILE_RIGHT):
+            return [2, 3]
         else:
             raise ValueError(f"[{cls.__name__}] Invalid data key: {key}")
 
