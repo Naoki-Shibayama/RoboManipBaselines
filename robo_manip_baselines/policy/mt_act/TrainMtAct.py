@@ -103,6 +103,7 @@ class TrainMtAct(TrainBase):
                 task_emb = self.text_encoder.encode(
                     task_text, convert_to_tensor=True, device="cuda"
                 )
+                task_emb = task_emb.clone().detach().requires_grad_(True)
                 batch_result = self.policy(*[d.cuda() for d in data[:-1]], task_emb)
                 loss = batch_result["loss"]
                 loss.backward()
@@ -121,6 +122,7 @@ class TrainMtAct(TrainBase):
                     task_emb = self.text_encoder.encode(
                         task_text, convert_to_tensor=True, device="cuda"
                     )
+                    task_emb = task_emb.clone().detach().requires_grad_(True)
                     batch_result = self.policy(*[d.cuda() for d in data[:-1]], task_emb)
                     batch_result_list.append(self.detach_batch_result(batch_result))
                 epoch_summary = self.log_epoch_summary(batch_result_list, "val", epoch)

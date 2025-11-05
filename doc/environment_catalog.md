@@ -49,6 +49,11 @@ Task to insert a pin into a hole.
 
 https://github.com/user-attachments/assets/6435a06d-fcd2-45ec-88da-5a26852dd4d8
 
+#### MujocoUR5ePick
+Task to pick up objects (9 types) and place them into baskets (2 types).
+
+https://github.com/user-attachments/assets/77ad9c36-4cda-4a09-a799-205386ed682c
+
 ### Dual UR5e
 #### MujocoUR5eDualCable
 Task to manipulate a cable with two grippers.
@@ -65,6 +70,11 @@ https://github.com/user-attachments/assets/450d04e8-7154-4c01-849c-d1f9b50be0ae
 Task to pick a ring and put it around the pole.
 
 https://github.com/user-attachments/assets/da83db94-7fcb-4690-9b73-41af0c1394a8
+
+#### MujocoXarm7Pusht
+Task to push the T-shaped block to align the pose.
+
+https://github.com/user-attachments/assets/000ae494-8ed5-423a-a26e-652b7817c372
 
 ### ALOHA
 #### MujocoAlohaCable

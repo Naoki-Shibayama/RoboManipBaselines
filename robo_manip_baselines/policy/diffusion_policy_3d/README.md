@@ -7,21 +7,7 @@ See [here](../../../doc/install.md#3D-Diffusion-policy) for installation.
 Collect demonstration data by [teleoperation](../../teleop).
 
 ## Data preprocessing
-Decide the parameters of the bounding box for cropping point clouds:
-```console
-# Go to the top directory of this repository
-$ cd robo_manip_baselines
-$ python ./misc/VisualizePointCloud.py ./dataset/<dataset_name>/<rmb_file_name>
-```
-After adjusting with the keyboard or 3D mouse, press the "P" key to print the parameters of the bounding box.
-
-Generate and store point clouds from RGB and depth images:
-```console
-# Go to the top directory of this repository
-$ cd robo_manip_baselines
-$ python ./misc/AddPointCloudToRmbData.py ./dataset/<dataset_name> --min_bound <x, y, z> --max_bound <x, y, z> --rpy_angle <roll, pitch, yaw>
-```
-For parameters of the bounding box such as `min_bound`, you can use the results adjusted in `VisualizePointCloud.py`.
+See [here](../../../doc/preprocessing_pointcloud.md) to perform data preprocessing for 3D point clouds.
 
 ## Model training
 Train a model:

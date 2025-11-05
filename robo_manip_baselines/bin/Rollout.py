@@ -17,6 +17,8 @@ class RolloutMain:
         "MtAct",
         "DiffusionPolicy",
         "DiffusionPolicy3d",
+        "FlowPolicy",
+        "ManiFlowPolicy",
     ]
 
     def __init__(self):

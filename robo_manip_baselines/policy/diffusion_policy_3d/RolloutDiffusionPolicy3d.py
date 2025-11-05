@@ -83,6 +83,11 @@ class RolloutDiffusionPolicy3d(RolloutBase):
         self.pointcloud_scatter = None
 
     def infer_policy(self):
+        # Update observation buffer
+        if len(self.state_keys) > 0:
+            self.update_state_buf()
+        self.update_pointcloud_buf()
+
         # Infer
         if self.policy_action_buf is None or len(self.policy_action_buf) == 0:
             input_data = {}
@@ -102,8 +107,7 @@ class RolloutDiffusionPolicy3d(RolloutBase):
             [self.policy_action_list, self.policy_action[np.newaxis]]
         )
 
-    def get_state(self):
-        # Get latest value
+    def update_state_buf(self):
         state = np.concatenate(
             [
                 self.motion_manager.get_data(state_key, self.obs)
@@ -113,7 +117,6 @@ class RolloutDiffusionPolicy3d(RolloutBase):
         state = normalize_data(state, self.model_meta_info["state"])
         state = torch.tensor(state, dtype=torch.float32)
 
-        # Store and return
         if self.state_buf is None:
             self.state_buf = [
                 state for _ in range(self.model_meta_info["data"]["n_obs_steps"])
@@ -122,27 +125,29 @@ class RolloutDiffusionPolicy3d(RolloutBase):
             self.state_buf.pop(0)
             self.state_buf.append(state)
 
-        state = torch.stack(self.state_buf, dim=0)[torch.newaxis].to(self.device)
+    def get_state(self):
+        return torch.stack(self.state_buf, dim=0)[torch.newaxis].to(self.device)
 
-        return state
-
-    def get_pointcloud(self):
+    def update_pointcloud_buf(self):
         # Get latest value
         camera_name = self.camera_names[0]
-        rgb_image = self.info["rgb_images"][camera_name]
-        depth_image = self.info["depth_images"][camera_name]
-        fovy = self.env.unwrapped.get_camera_fovy(camera_name)
+        if camera_name in self.env.unwrapped.pointcloud_camera_names:
+            pointcloud = self.info["pointclouds"][camera_name]
+        else:
+            rgb_image = self.info["rgb_images"][camera_name]
+            depth_image = self.info["depth_images"][camera_name]
+            fovy = self.env.unwrapped.get_camera_fovy(camera_name)
 
-        # Resize images
-        image_size = self.model_meta_info["data"]["image_size"]
-        rgb_image = cv2.resize(rgb_image, image_size)
-        depth_image = cv2.resize(depth_image, image_size)
+            # Resize images
+            image_size = self.model_meta_info["data"]["image_size"]
+            rgb_image = cv2.resize(rgb_image, image_size)
+            depth_image = cv2.resize(depth_image, image_size)
 
-        # Convert to pointcloud
-        pointcloud = np.concat(
-            convert_depth_image_to_pointcloud(depth_image, fovy, rgb_image),
-            axis=1,
-        )
+            # Convert to pointcloud
+            pointcloud = np.concat(
+                convert_depth_image_to_pointcloud(depth_image, fovy, rgb_image),
+                axis=1,
+            )
         # Crop and downsample pointcloud
         rotmat = euler_to_rotation_matrix(self.model_meta_info["data"]["rpy_angle"])
         pointcloud = rotate_pointcloud(pointcloud, rotmat)
@@ -159,7 +164,7 @@ class RolloutDiffusionPolicy3d(RolloutBase):
         pointcloud = normalize_data(pointcloud, self.model_meta_info["pointcloud"])
         pointcloud = torch.tensor(pointcloud, dtype=torch.float32)
 
-        # Store and return
+        # Store to buffer
         if self.pointcloud_buf is None:
             self.pointcloud_buf = [
                 pointcloud for _ in range(self.model_meta_info["data"]["n_obs_steps"])
@@ -168,11 +173,8 @@ class RolloutDiffusionPolicy3d(RolloutBase):
             self.pointcloud_buf.pop(0)
             self.pointcloud_buf.append(pointcloud)
 
-        pointcloud = torch.stack(self.pointcloud_buf, dim=0)[torch.newaxis].to(
-            self.device
-        )
-
-        return pointcloud
+    def get_pointcloud(self):
+        return torch.stack(self.pointcloud_buf, dim=0)[torch.newaxis].to(self.device)
 
     def plot_pointcloud(self, ax):
         xyz_array = self.pointcloud_plot[:, :3]

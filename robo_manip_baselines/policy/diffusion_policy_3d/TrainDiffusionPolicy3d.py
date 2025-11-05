@@ -3,7 +3,6 @@ import copy
 import os
 import sys
 
-import numpy as np
 import torch
 from diffusers.schedulers.scheduling_ddim import DDIMScheduler
 from omegaconf import OmegaConf
@@ -19,12 +18,15 @@ from diffusion_policy_3d.common.pytorch_util import dict_apply, optimizer_to
 from diffusion_policy_3d.model.common.lr_scheduler import get_scheduler
 from diffusion_policy_3d.model.diffusion.ema_model import EMAModel
 from diffusion_policy_3d.policy.dp3 import DP3
-from robo_manip_baselines.common import DataKey, RmbData, TrainBase
+from robo_manip_baselines.common import (
+    TrainBase,
+    TrainPointCloudMixin,
+)
 
 from .DiffusionPolicy3dDataset import DiffusionPolicy3dDataset
 
 
-class TrainDiffusionPolicy3d(TrainBase):
+class TrainDiffusionPolicy3d(TrainBase, TrainPointCloudMixin):
     DatasetClass = DiffusionPolicy3dDataset
 
     def set_additional_args(self, parser):
@@ -84,61 +86,15 @@ class TrainDiffusionPolicy3d(TrainBase):
     def setup_model_meta_info(self):
         super().setup_model_meta_info()
 
-        # Retrieve point cloud information
-        pc_key = DataKey.get_pointcloud_key(self.args.camera_names[0])
-        num_points = None
-        image_size = None
-        min_bound = None
-        max_bound = None
-        rpy_angle = None
-        for filename in self.all_filenames:
-            with RmbData(filename) as rmb_data:
-                num_points_new = rmb_data[pc_key].shape[1]
-                if num_points is None:
-                    num_points = num_points_new
-                elif num_points != num_points_new:
-                    raise ValueError(
-                        f"[{self.__class__.__name__}] num_points is inconsistent in dataset: {num_points} != {num_points_new}"
-                    )
-
-                image_size_new = rmb_data.attrs[pc_key + "_image_size"]
-                if image_size is None:
-                    image_size = image_size_new
-                elif not np.array_equal(image_size, image_size_new):
-                    raise ValueError(
-                        f"[{self.__class__.__name__}] image_size is inconsistent in dataset: {image_size} != {image_size_new}"
-                    )
-
-                min_bound_new = rmb_data.attrs[pc_key + "_min_bound"]
-                if min_bound is None:
-                    min_bound = min_bound_new
-                elif not np.allclose(min_bound, min_bound_new):
-                    raise ValueError(
-                        f"[{self.__class__.__name__}] min_bound is inconsistent in dataset: {min_bound} != {min_bound_new}"
-                    )
-
-                max_bound_new = rmb_data.attrs[pc_key + "_max_bound"]
-                if max_bound is None:
-                    max_bound = max_bound_new
-                elif not np.allclose(max_bound, max_bound_new):
-                    raise ValueError(
-                        f"[{self.__class__.__name__}] max_bound is inconsistent in dataset: {max_bound} != {max_bound_new}"
-                    )
-
-                rpy_angle_new = rmb_data.attrs[pc_key + "_rpy_angle"]
-                if rpy_angle is None:
-                    rpy_angle = rpy_angle_new
-                elif not np.allclose(rpy_angle, rpy_angle_new):
-                    raise ValueError(
-                        f"[{self.__class__.__name__}] rpy_angle is inconsistent in dataset: {rpy_angle} != {rpy_angle_new}"
-                    )
-
         self.model_meta_info["data"]["horizon"] = self.args.horizon
         self.model_meta_info["data"]["n_obs_steps"] = self.args.n_obs_steps
         self.model_meta_info["data"]["n_action_steps"] = self.args.n_action_steps
         self.model_meta_info["data"]["use_pc_color"] = self.args.use_pc_color
+
+        num_points, image_size, min_bound, max_bound, rpy_angle = (
+            self.setup_pointcloud_info()
+        )
         self.model_meta_info["data"]["num_points"] = num_points
-        self.model_meta_info["data"]["n_point_dim"] = 6 if self.args.use_pc_color else 3
         self.model_meta_info["data"]["image_size"] = image_size
         self.model_meta_info["data"]["min_bound"] = min_bound
         self.model_meta_info["data"]["max_bound"] = max_bound
@@ -149,17 +105,7 @@ class TrainDiffusionPolicy3d(TrainBase):
     def set_data_stats(self):
         super().set_data_stats()
 
-        # Load dataset
-        pc_key = DataKey.get_pointcloud_key(self.args.camera_names[0])
-        all_pointcloud = []
-        for filename in self.all_filenames:
-            with RmbData(filename) as rmb_data:
-                # Load pointcloud
-                pointcloud = rmb_data[pc_key][:: self.args.skip]
-                all_pointcloud.append(pointcloud.reshape(-1, pointcloud.shape[-1]))
-        all_pointcloud = np.concatenate(all_pointcloud, dtype=np.float64)
-
-        self.model_meta_info["pointcloud"] = self.calc_stats_from_seq(all_pointcloud)
+        self.set_pointcloud_stats()
 
     def get_extra_norm_config(self):
         if self.args.norm_type == "limits":
@@ -183,9 +129,10 @@ class TrainDiffusionPolicy3d(TrainBase):
                 "shape": [len(self.model_meta_info["state"]["example"])],
                 "type": "low_dim",
             }
+        point_dim = 6 if self.args.use_pc_color else 3
         pointcloud_shape = (
             self.model_meta_info["data"]["num_points"],
-            self.model_meta_info["data"]["n_point_dim"],
+            point_dim,
         )
         shape_meta["obs"]["point_cloud"] = {
             "shape": pointcloud_shape,
@@ -193,7 +140,7 @@ class TrainDiffusionPolicy3d(TrainBase):
         }
         pointcloud_encoder_conf = OmegaConf.create(
             {
-                "in_channels": self.model_meta_info["data"]["n_point_dim"],
+                "in_channels": point_dim,
                 "out_channels": self.args.encoder_output_dim,
                 "use_layernorm": True,
                 "final_norm": "layernorm",

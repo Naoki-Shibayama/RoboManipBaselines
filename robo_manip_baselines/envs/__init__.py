@@ -56,6 +56,11 @@ register(
     entry_point="robo_manip_baselines.envs.mujoco:MujocoXarm7RingEnv",
 )
 
+register(
+    id="robo_manip_baselines/MujocoXarm7PushtEnv-v0",
+    entry_point="robo_manip_baselines.envs.mujoco:MujocoXarm7PushtEnv",
+)
+
 ## ViperX 300S
 register(
     id="robo_manip_baselines/MujocoVx300sPickEnv-v0",
@@ -99,6 +104,12 @@ register(
 register(
     id="robo_manip_baselines/RealUR5eDemoEnv-v0",
     entry_point="robo_manip_baselines.envs.real.ur5e:RealUR5eDemoEnv",
+)
+
+## UR5e-Dual
+register(
+    id="robo_manip_baselines/RealUR5eDualDemoEnv-v0",
+    entry_point="robo_manip_baselines.envs.real.ur5e_dual:RealUR5eDualDemoEnv",
 )
 
 ## xArm7
