@@ -95,6 +95,22 @@ class TrainDiffusionPolicy(TrainBase):
         )
 
         parser.add_argument(
+            "--tactile_token_keys",
+            type=str,
+            nargs="*",
+            default=None,
+            choices=DataKey.TACTILE_SENSOR_KEYS,
+            help="tactile keys for additional token",
+        )
+        parser.add_argument(
+            "--tactile_type",
+            type=str,
+            choices=["mujoco", "real_sanwa_keyboards"],
+            default="mujoco",
+            help="type of tactile sensor",
+        )
+
+        parser.add_argument(
             "--image_size",
             type=int,
             nargs=2,

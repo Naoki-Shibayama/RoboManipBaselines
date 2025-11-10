@@ -19,6 +19,7 @@ from diffusion_policy_3d.model.common.lr_scheduler import get_scheduler
 from diffusion_policy_3d.model.diffusion.ema_model import EMAModel
 from diffusion_policy_3d.policy.dp3 import DP3
 from robo_manip_baselines.common import (
+    DataKey,
     TrainBase,
     TrainPointCloudMixin,
 )
@@ -70,6 +71,22 @@ class TrainDiffusionPolicy3d(TrainBase, TrainPointCloudMixin):
         )
 
         parser.add_argument(
+            "--tactile_token_keys",
+            type=str,
+            nargs="*",
+            default=None,
+            choices=DataKey.TACTILE_SENSOR_KEYS,
+            help="tactile keys for additional token",
+        )
+        parser.add_argument(
+            "--tactile_type",
+            type=str,
+            choices=["mujoco", "real_sanwa_keyboards"],
+            default="mujoco",
+            help="type of tactile sensor",
+        )
+
+        parser.add_argument(
             "--use_pc_color",
             action="store_true",
             help="Whether to use color information of point cloud",
@@ -90,6 +107,11 @@ class TrainDiffusionPolicy3d(TrainBase, TrainPointCloudMixin):
         self.model_meta_info["data"]["n_obs_steps"] = self.args.n_obs_steps
         self.model_meta_info["data"]["n_action_steps"] = self.args.n_action_steps
         self.model_meta_info["data"]["use_pc_color"] = self.args.use_pc_color
+
+        self.model_meta_info["data"]["tactile_token_keys"] = (
+            self.args.tactile_token_keys
+        )
+        self.model_meta_info["data"]["tactile_type"] = self.args.tactile_type
 
         num_points, image_size, min_bound, max_bound, rpy_angle = (
             self.setup_pointcloud_info()
@@ -127,6 +149,15 @@ class TrainDiffusionPolicy3d(TrainBase, TrainPointCloudMixin):
         if len(self.args.state_keys) > 0:
             shape_meta["obs"]["state"] = {
                 "shape": [len(self.model_meta_info["state"]["example"])],
+                "type": "low_dim",
+            }
+        if self.args.tactile_token_keys is not None:
+            if self.args.tactile_type == "mujoco":
+                shape = 40 * 2
+            else:
+                shape = 6 * 2
+            shape_meta["obs"]["tactile"] = {
+                "shape": [shape],
                 "type": "low_dim",
             }
         point_dim = 6 if self.args.use_pc_color else 3

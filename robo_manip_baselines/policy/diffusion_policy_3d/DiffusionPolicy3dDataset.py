@@ -24,6 +24,7 @@ class DiffusionPolicy3dDataset(DatasetBase, DpStyleDatasetMixin):
         skip = self.model_meta_info["data"]["skip"]
         horizon = self.model_meta_info["data"]["horizon"]
         episode_idx, start_time_idx = self.chunk_info_list[chunk_idx]
+        tactile_keys = self.model_meta_info["data"]["tactile_token_keys"]
 
         with RmbData(self.filenames[episode_idx], self.enable_rmb_cache) as rmb_data:
             episode_len = rmb_data[DataKey.TIME][::skip].shape[0]
@@ -58,6 +59,15 @@ class DiffusionPolicy3dDataset(DatasetBase, DpStyleDatasetMixin):
                 time_idxes
             ]
 
+            # Load tactiles
+            if tactile_keys is not None:
+                tactiles = np.concatenate(
+                    [rmb_data[key][::skip][time_idxes] for key in tactile_keys]
+                )
+            else:
+                tactiles = None
+                tactile_tensor = None
+
         # Pre-convert data
         state, action, pointcloud = self.pre_convert_data(state, action, pointcloud)
 
@@ -76,6 +86,10 @@ class DiffusionPolicy3dDataset(DatasetBase, DpStyleDatasetMixin):
         if len(self.model_meta_info["state"]["keys"]) > 0:
             data["obs"]["state"] = state_tensor
         data["obs"]["point_cloud"] = pointcloud_tensor
+        if tactiles is not None:
+            tactiles = tactiles.reshape(len(state_tensor), -1)
+            tactile_tensor = torch.tensor(tactiles, dtype=torch.float32)
+            data["obs"]["tactile"] = tactile_tensor
         return data
 
     def pre_convert_data(self, state, action, pointcloud):
