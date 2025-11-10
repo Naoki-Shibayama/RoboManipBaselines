@@ -119,6 +119,11 @@ class TrainDiffusionPolicy(TrainBase):
         self.model_meta_info["data"]["n_obs_steps"] = self.args.n_obs_steps
         self.model_meta_info["data"]["n_action_steps"] = self.args.n_action_steps
 
+        self.model_meta_info["data"]["tactile_token_keys"] = (
+            self.args.tactile_token_keys
+        )
+        self.model_meta_info["data"]["tactile_type"] = self.args.tactile_type
+
         self.model_meta_info["policy"]["use_ema"] = self.args.use_ema
         self.model_meta_info["policy"]["backbone"] = self.args.backbone
         self.model_meta_info["policy"]["scheduler"] = self.args.scheduler
@@ -147,6 +152,17 @@ class TrainDiffusionPolicy(TrainBase):
             shape_meta["obs"][DataKey.get_rgb_image_key(camera_name)] = {
                 "shape": [3, self.args.image_size[1], self.args.image_size[0]],
                 "type": "rgb",
+            }
+        if self.args.tactile_token_keys is not None:
+            if self.args.tactile_type == "mujoco":
+                shape = 40 * 2
+            elif self.args.tactile_type == "real_sanwa_keyboards":
+                shape = 6 * 2
+            else:
+                raise ValueError
+            shape_meta["obs"]["tactile"] = {
+                "shape": [shape],
+                "type": "low_dim",
             }
         self.model_meta_info["policy"]["args"] = {
             "shape_meta": shape_meta,

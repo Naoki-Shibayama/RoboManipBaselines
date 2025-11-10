@@ -91,11 +91,17 @@ class RolloutDiffusionPolicy(RolloutBase):
         )
         super().setup_plot(fig_ax)
 
+    def setup_variables(self):
+        super().setup_variables()
+
+        self.tactile_token_keys = self.model_meta_info["data"]["tactile_token_keys"]
+
     def reset_variables(self):
         super().reset_variables()
 
         self.state_buf = None
         self.images_buf = None
+        self.tactile_buf = None
         self.policy_action_buf = None
 
     def infer_policy(self):
@@ -103,6 +109,8 @@ class RolloutDiffusionPolicy(RolloutBase):
         if len(self.state_keys) > 0:
             self.update_state_buf()
         self.update_images_buf()
+        if self.tactile_token_keys is not None:
+            self.update_tactile_buf()
 
         # Infer
         if self.policy_action_buf is None or len(self.policy_action_buf) == 0:
@@ -111,6 +119,8 @@ class RolloutDiffusionPolicy(RolloutBase):
                 input_data["state"] = self.get_state()
             for camera_name, image in zip(self.camera_names, self.get_images()):
                 input_data[DataKey.get_rgb_image_key(camera_name)] = image
+            if self.tactile_token_keys is not None:
+                input_data["tactile"] = self.get_tactile()
             action = self.policy.predict_action(input_data)["action"][0]
             self.policy_action_buf = list(
                 action.cpu().detach().numpy().astype(np.float64)
@@ -175,6 +185,26 @@ class RolloutDiffusionPolicy(RolloutBase):
             torch.stack(single_images_buf, dim=0)[torch.newaxis].to(self.device)
             for single_images_buf in self.images_buf
         ]
+
+    def update_tactile_buf(self):
+        tactile = np.concatenate(
+            [
+                self.motion_manager.get_data(tactile_key, self.obs)
+                for tactile_key in self.tactile_token_keys
+            ]
+        ).reshape(-1)
+        tactile = torch.tensor(tactile, dtype=torch.float32)
+
+        if self.tactile_buf is None:
+            self.tactile_buf = [
+                tactile for _ in range(self.model_meta_info["data"]["n_obs_steps"])
+            ]
+        else:
+            self.tactile_buf.pop(0)
+            self.tactile_buf.append(tactile)
+
+    def get_tactile(self):
+        return torch.stack(self.tactile_buf, dim=0)[torch.newaxis].to(self.device)
 
     def draw_plot(self):
         # Clear plot

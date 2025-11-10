@@ -24,6 +24,7 @@ class DiffusionPolicyDataset(DatasetBase, DpStyleDatasetMixin):
         skip = self.model_meta_info["data"]["skip"]
         horizon = self.model_meta_info["data"]["horizon"]
         episode_idx, start_time_idx = self.chunk_info_list[chunk_idx]
+        tactile_keys = self.model_meta_info["data"]["tactile_token_keys"]
 
         with RmbData(self.filenames[episode_idx], self.enable_rmb_cache) as rmb_data:
             episode_len = rmb_data[DataKey.TIME][::skip].shape[0]
@@ -60,6 +61,14 @@ class DiffusionPolicyDataset(DatasetBase, DpStyleDatasetMixin):
                 ],
                 axis=0,
             )
+            # Load tactiles
+            if tactile_keys is not None:
+                tactiles = np.concatenate(
+                    [rmb_data[key][::skip][time_idxes] for key in tactile_keys]
+                )
+            else:
+                tactiles = None
+                tactile_tensor = None
 
         # Resize images
         K, T, H, W, C = images.shape
@@ -91,6 +100,10 @@ class DiffusionPolicyDataset(DatasetBase, DpStyleDatasetMixin):
             data["obs"][DataKey.get_rgb_image_key(camera_name)] = images_tensor[
                 camera_idx
             ]
+        if tactiles is not None:
+            tactiles = tactiles.reshape(T, -1)
+            tactile_tensor = torch.tensor(tactiles, dtype=torch.float32)
+            data["obs"]["tactile"] = tactile_tensor
 
         return data
 
