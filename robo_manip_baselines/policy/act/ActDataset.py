@@ -19,6 +19,7 @@ class ActDataset(DatasetBase):
     def __getitem__(self, episode_idx):
         skip = self.model_meta_info["data"]["skip"]
         chunk_size = self.model_meta_info["data"]["chunk_size"]
+        tactile_keys = self.model_meta_info["data"]["tactile_token_keys"]
 
         with RmbData(self.filenames[episode_idx], self.enable_rmb_cache) as rmb_data:
             episode_len = rmb_data[DataKey.TIME][::skip].shape[0]
@@ -67,6 +68,15 @@ class ActDataset(DatasetBase):
                 axis=0,
             )
 
+            # Load tactiles
+            if tactile_keys is not None:
+                tactiles = np.concatenate(
+                    [rmb_data[key][::skip][start_time_idx] for key in tactile_keys]
+                )
+            else:
+                tactiles = None
+                tactile_tensor = None
+
         # Chunk action
         action_len = action.shape[0]
         action_chunked = np.zeros((chunk_size, action.shape[1]), dtype=np.float64)
@@ -84,6 +94,9 @@ class ActDataset(DatasetBase):
         action_tensor = torch.tensor(action_chunked, dtype=torch.float32)
         images_tensor = torch.tensor(images, dtype=torch.uint8)
         is_pad_tensor = torch.tensor(is_pad, dtype=torch.bool)
+        if tactiles is not None:
+            tactiles = tactiles.reshape(-1)
+            tactile_tensor = torch.tensor(tactiles, dtype=torch.float32)
 
         # Augment data
         state_tensor, action_tensor, images_tensor = self.augment_data(
@@ -91,4 +104,4 @@ class ActDataset(DatasetBase):
         )
 
         # Sort in the order of policy inputs and outputs
-        return state_tensor, images_tensor, action_tensor, is_pad_tensor
+        return state_tensor, images_tensor, action_tensor, is_pad_tensor, tactile_tensor

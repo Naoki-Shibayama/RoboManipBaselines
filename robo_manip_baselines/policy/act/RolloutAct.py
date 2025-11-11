@@ -4,6 +4,7 @@ import sys
 import cv2
 import matplotlib.pylab as plt
 import numpy as np
+import torch
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "../../../third_party/act"))
 from detr.models.detr_vae import DETRVAE
@@ -30,6 +31,10 @@ class RolloutAct(RolloutBase):
         # Construct policy
         DETRVAE.set_state_dim(self.state_dim)
         DETRVAE.set_action_dim(self.action_dim)
+        if self.model_meta_info["data"]["tactile_type"] == "mujoco":
+            DETRVAE.set_tactile_dim(40 * 2)
+        elif self.model_meta_info["data"]["tactile_type"] == "real_sanwa_keyboards":
+            DETRVAE.set_tactile_dim(6 * 2)
         self.policy = ACTPolicy(self.model_meta_info["policy"]["args"])
 
         # Register fook to visualize attention images
@@ -59,18 +64,41 @@ class RolloutAct(RolloutBase):
         )
         super().setup_plot(fig_ax)
 
+    def setup_variables(self):
+        super().setup_variables()
+
+        self.tactile_token_keys = self.model_meta_info["data"]["tactile_token_keys"]
+
     def reset_variables(self):
         super().reset_variables()
 
         self.policy_action_buf = []
         self.policy_action_buf_history = []
 
+    def get_tactile(self):
+        if self.tactile_token_keys is None or len(self.tactile_token_keys) == 0:
+            tactile = None
+        else:
+            tactile = np.concatenate(
+                [
+                    self.motion_manager.get_data(tactile_key, self.obs)
+                    for tactile_key in self.tactile_token_keys
+                ]
+            ).reshape(-1)
+
+            tactile = torch.tensor(tactile[np.newaxis], dtype=torch.float32).to(
+                self.device
+            )
+
+        return tactile
+
     def infer_policy(self):
         # Infer
         if (not self.args.no_temp_ensem) or (len(self.policy_action_buf) == 0):
             state = self.get_state()
             images = self.get_images()
-            action = self.policy(state, images)[0]
+            tactile = self.get_tactile()
+            action = self.policy(state, images, tactile=tactile)[0]
             self.policy_action_buf = list(
                 action.cpu().detach().numpy().astype(np.float64)
             )
@@ -118,7 +146,9 @@ class RolloutAct(RolloutBase):
             if layer.self_attn.correlation_mat is None:
                 continue
             self.ax[1, layer_idx].imshow(
-                layer.self_attn.correlation_mat[2:, 1].reshape(attention_shape)
+                layer.self_attn.correlation_mat[2:, 1]
+                .reshape(-1)[1:301]
+                .reshape(attention_shape)
             )
             self.ax[1, layer_idx].set_title(
                 f"attention image ({layer_idx})", fontsize=20

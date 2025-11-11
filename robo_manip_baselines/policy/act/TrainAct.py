@@ -8,7 +8,10 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "../../../third_party/ac
 from detr.models.detr_vae import DETRVAE
 from policy import ACTPolicy
 
-from robo_manip_baselines.common import TrainBase
+from robo_manip_baselines.common import (
+    DataKey,
+    TrainBase,
+)
 
 from .ActDataset import ActDataset
 
@@ -36,10 +39,30 @@ class TrainAct(TrainBase):
             "--dim_feedforward", type=int, default=3200, help="feedforward dimension"
         )
 
+        parser.add_argument(
+            "--tactile_token_keys",
+            type=str,
+            nargs="*",
+            default=None,
+            choices=DataKey.TACTILE_SENSOR_KEYS,
+            help="tactile keys for additional token",
+        )
+        parser.add_argument(
+            "--tactile_type",
+            type=str,
+            choices=["mujoco", "real_sanwa_keyboards"],
+            default="mujoco",
+            help="type of tactile sensor",
+        )
+
     def setup_model_meta_info(self):
         super().setup_model_meta_info()
 
         self.model_meta_info["data"]["chunk_size"] = self.args.chunk_size
+        self.model_meta_info["data"]["tactile_token_keys"] = (
+            self.args.tactile_token_keys
+        )
+        self.model_meta_info["data"]["tactile_type"] = self.args.tactile_type
 
     def setup_policy(self):
         # Set policy args
@@ -60,6 +83,10 @@ class TrainAct(TrainBase):
         # Construct policy
         DETRVAE.set_state_dim(len(self.model_meta_info["state"]["example"]))
         DETRVAE.set_action_dim(len(self.model_meta_info["action"]["example"]))
+        if self.args.tactile_type == "mujoco":
+            DETRVAE.set_tactile_dim(40 * 2)
+        elif self.args.tactile_type == "real_sanwa_keyboards":
+            DETRVAE.set_tactile_dim(6 * 2)
         self.policy = ACTPolicy(self.model_meta_info["policy"]["args"])
         self.policy.cuda()
 
