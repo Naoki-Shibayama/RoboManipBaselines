@@ -19,6 +19,7 @@ class RolloutMain:
         "DiffusionPolicy3d",
         "FlowPolicy",
         "ManiFlowPolicy",
+        "Dspv2",
     ]
 
     def __init__(self):

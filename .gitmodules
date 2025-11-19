@@ -38,3 +38,9 @@
 	path = third_party/ManiFlow_Policy
 	url = https://github.com/Naoki-Shibayama/ManiFlow_Policy.git
         ignore = untracked
+[submodule "third_party/DSPv2"]
+	path = third_party/DSPv2
+	url = https://github.com/Selen-Suyue/DSPv2.git
+[submodule "third_party/MinkowskiEngine"]
+	path = third_party/MinkowskiEngine
+	url = https://github.com/AzharSindhi/MinkowskiEngineCuda13.git
