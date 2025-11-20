@@ -135,6 +135,32 @@ $ pip install -e .
 > $ PYTORCH3D_FORCE_NO_CUDA=1 pip install -e .
 > ```
 
+### [DSPv2](../robo_manip_baselines/policy/dspv_2)
+Install dependent libraries including [MinkowskiEngine](https://github.com/NVIDIA/MinkowskiEngine):
+```console
+$ sudo apt install -y build-essential python3-dev libopenblas-dev
+
+# Go to the top directory of this repository
+$ pip install -e .[dspv2]
+
+# Go to the top directory of this repository
+$ cd third_party/MinkowskiEngine
+$ pip install -e . --install-option="--blas=openblas"
+$ cd ../DSPv2
+$ python ./utils/download_dino.py
+```
+
+> [!NOTE]
+> If you encounter a CUDA-related error during `pip install -e . --install-option="--blas=openblas"` step, please run the command with the following additional argument:
+> ```
+> $ pip install -e . --install-option="--blas=openblas" --install-option="--force_cuda"
+> ```
+> If you encounter a PyTorch import error during `pip install -e . --install-option="--blas=openblas"` step, please run setup.py directly with the following command:
+> ```
+> $ python setup.py install --blas=openblas
+> ```
+> If you want to use DINOv3Encoder, please login huggingface, download from [this repo](https://huggingface.co/facebook/dinov3-vitb16-pretrain-lvd1689m/tree/main)(agreement required) and place model files to (top directory of this repository)/third_party/DSPv2/weights/dinov3-base/.
+
 ## Installation of each teleoperation interface
 Complete [the common installation](#common-installation) first.
 

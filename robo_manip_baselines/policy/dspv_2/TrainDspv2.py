@@ -81,7 +81,7 @@ class TrainDspv2(TrainBase, TrainPointCloudMixin):
             "--view_camera_names",
             type=str,
             nargs="+",
-            default=["front", "side", "hand"],
+            default=["front", "hand", "left", "right"],
             help="camera names to use as view",
         )
 
