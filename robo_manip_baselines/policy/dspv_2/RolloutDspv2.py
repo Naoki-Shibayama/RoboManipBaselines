@@ -36,7 +36,6 @@ class RolloutDspv2(RolloutBase):
     def setup_variables(self):
         super().setup_variables()
 
-        self.view_camera_names = self.model_meta_info["image"]["view_camera_names"]
         self.n_pointcloud_dim = 6 if self.model_meta_info["data"]["use_pc_color"] else 3
 
     def setup_policy(self):
@@ -50,6 +49,8 @@ class RolloutDspv2(RolloutBase):
             f"  - with color: {data_info['use_pc_color']}, num points: {data_info['num_points']}, image size: {data_info['image_size']}, min bound: {data_info['min_bound']}, max bound: {data_info['max_bound']}, rpy_angle: {data_info['rpy_angle']}"
         )
 
+        self.view_camera_names = self.model_meta_info["image"]["view_camera_names"]
+
         # Construct policy
         self.policy = dspv2(
             **self.model_meta_info["policy"]["args"],
@@ -61,7 +62,7 @@ class RolloutDspv2(RolloutBase):
     def setup_plot(self):
         fig_ax = plt.subplots(
             2,
-            1,
+            1 + len(self.view_camera_names),
             figsize=(13.5, 6.0),
             dpi=60,
             squeeze=False,
@@ -119,7 +120,7 @@ class RolloutDspv2(RolloutBase):
                 convert_depth_image_to_pointcloud(depth_image, fovy, rgb_image),
                 axis=1,
             )
-        # Crop and downsample pointcloud
+        # Crop, voxelize and downsample pointcloud
         rotmat = euler_to_rotation_matrix(self.model_meta_info["data"]["rpy_angle"])
         pointcloud = rotate_pointcloud(pointcloud, rotmat)
         pointcloud = crop_pointcloud_bb(
@@ -127,20 +128,25 @@ class RolloutDspv2(RolloutBase):
             self.model_meta_info["data"]["min_bound"],
             self.model_meta_info["data"]["max_bound"],
         )
+        _, pointcloud = voxelize_pointcloud_for_dspv2(
+            pointcloud,
+            self.model_meta_info["data"]["voxel_size"],
+        )
         pointcloud = downsample_pointcloud_fps(
             pointcloud,
             self.model_meta_info["data"]["num_points"],
         )
-        normalized_pc = normalize_data(pointcloud, self.model_meta_info["pointcloud"])
+        self.pointcloud_plot = pointcloud.copy()
 
-        # Get voxelize plot_pointcloud
-        pcd_coords, pcd_feats = voxelize_pointcloud_for_dspv2(pointcloud, 0.005)
-        self.pointcloud_plot = pcd_feats.copy()
-
-        # Voxelize pointcloud
-        pcd_coords, pcd_feats = voxelize_pointcloud_for_dspv2(
-            normalized_pc[:, : self.n_pointcloud_dim], 0.005
+        # Get sparse tensor
+        pcd_coords, _ = voxelize_pointcloud_for_dspv2(
+            pointcloud,
+            self.model_meta_info["data"]["voxel_size"],
         )
+        normalized_pc = normalize_data(pointcloud, self.model_meta_info["pointcloud"])
+        _, pcd_feats = voxelize_pointcloud_for_dspv2(
+            normalized_pc[:, : self.n_pointcloud_dim], 1
+        )  # Set voxel_size=1 for avoiding duplicated preprocessing
         pcd_coords_tensor = torch.tensor(pcd_coords, dtype=torch.float32).to(
             self.device
         )
@@ -198,6 +204,11 @@ class RolloutDspv2(RolloutBase):
         # Reassign the updated axis
         return ax
 
+    def plot_images(self, axes):
+        for camera_idx, camera_name in enumerate(self.view_camera_names):
+            axes[camera_idx].imshow(self.info["rgb_images"][camera_name])
+            axes[camera_idx].set_title(camera_name + "_view", fontsize=20)
+
     def draw_plot(self):
         # Clear plot
         for _ax in np.ravel(self.ax[1]):  # Do not reset 3D axis
@@ -206,6 +217,8 @@ class RolloutDspv2(RolloutBase):
 
         # Plot pointclouds
         self.ax[0, 0] = self.plot_pointcloud(self.ax[0, 0])
+
+        self.ax[0, 1 : len(self.view_camera_names) + 1] = self.plot_images()
 
         # Plot action
         self.plot_action(self.ax[1, 0])

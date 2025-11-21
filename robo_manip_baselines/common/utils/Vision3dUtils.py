@@ -4,8 +4,8 @@ import torch
 
 
 def voxelize_pointcloud_for_dspv2(pointcloud: np.ndarray, voxel_size: float):
-    points = pointcloud
-    coords = np.floor(points / voxel_size).astype(np.int32)
+    points = pointcloud.copy()
+    coords = np.floor(points[:, :3] / voxel_size).astype(np.int32)
     _, unique_indices = np.unique(coords, axis=0, return_index=True)
 
     return coords[unique_indices], points[unique_indices]

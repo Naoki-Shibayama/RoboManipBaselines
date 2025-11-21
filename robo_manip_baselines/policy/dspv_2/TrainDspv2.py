@@ -97,7 +97,7 @@ class TrainDspv2(TrainBase, TrainPointCloudMixin):
         self.model_meta_info["data"]["n_action_steps"] = self.args.n_action_steps
         self.model_meta_info["data"]["use_pc_color"] = self.args.use_pc_color
 
-        num_points, image_size, min_bound, max_bound, rpy_angle = (
+        num_points, image_size, min_bound, max_bound, rpy_angle, voxel_size = (
             self.setup_pointcloud_info()
         )
         self.model_meta_info["data"]["num_points"] = num_points
@@ -105,6 +105,7 @@ class TrainDspv2(TrainBase, TrainPointCloudMixin):
         self.model_meta_info["data"]["min_bound"] = min_bound
         self.model_meta_info["data"]["max_bound"] = max_bound
         self.model_meta_info["data"]["rpy_angle"] = rpy_angle
+        self.model_meta_info["data"]["voxel_size"] = voxel_size
 
     def setup_policy(self):
         # Set policy args

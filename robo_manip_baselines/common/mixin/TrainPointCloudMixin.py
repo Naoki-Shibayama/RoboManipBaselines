@@ -13,6 +13,7 @@ class TrainPointCloudMixin:
         min_bound = None
         max_bound = None
         rpy_angle = None
+        voxel_size = None
 
         for filename in self.all_filenames:
             with RmbData(filename) as rmb_data:
@@ -56,7 +57,15 @@ class TrainPointCloudMixin:
                         f"[{self.__class__.__name__}] rpy_angle is inconsistent in dataset: {rpy_angle} != {rpy_angle_new}"
                     )
 
-        return num_points, image_size, min_bound, max_bound, rpy_angle
+                voxel_size_new = rmb_data.attrs[pc_key + "_voxel_size"]
+                if voxel_size is None:
+                    voxel_size = voxel_size_new
+                elif not np.allclose(rpy_angle, rpy_angle_new):
+                    raise ValueError(
+                        f"[{self.__class__.__name__}] voxel_size is inconsistent in dataset: {voxel_size} != {voxel_size_new}"
+                    )
+
+        return num_points, image_size, min_bound, max_bound, rpy_angle, voxel_size
 
     def set_pointcloud_stats(self):
         pc_key = DataKey.get_pointcloud_key(self.args.camera_names[0])

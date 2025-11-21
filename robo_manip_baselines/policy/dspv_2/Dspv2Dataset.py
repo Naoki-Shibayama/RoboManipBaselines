@@ -40,6 +40,7 @@ class Dspv2Dataset(DatasetBase):
         self.chunk_info_list = []
         skip = self.model_meta_info["data"]["skip"]
         n_action_steps = self.model_meta_info["data"]["n_action_steps"]
+        self.voxel_size = self.model_meta_info["data"]["voxel_size"]
         self.n_pointcloud_dim = 6 if self.model_meta_info["data"]["use_pc_color"] else 3
         pad_after = self.model_meta_info["data"]["n_action_steps"] - 1
 
@@ -145,9 +146,11 @@ class Dspv2Dataset(DatasetBase):
     def pre_convert_data(self, state, action, pointcloud, images):
         """Pre-convert data. Arguments must be numpy arrays (not torch tensors)."""
         state, action, images = super().pre_convert_data(state, action, images)
-        pointcloud = normalize_data(pointcloud, self.model_meta_info["pointcloud"])
-        pointcloud_coords, pointcloud_feats = voxelize_pointcloud_for_dspv2(
-            pointcloud[:, : self.n_pointcloud_dim], 0.005
+        pointcloud_coords, pointcloud = voxelize_pointcloud_for_dspv2(
+            pointcloud, self.voxel_size
         )
+        pointcloud_feats = normalize_data(
+            pointcloud, self.model_meta_info["pointcloud"]
+        )[:, : self.n_pointcloud_dim]
 
         return state, action, pointcloud_coords, pointcloud_feats, images

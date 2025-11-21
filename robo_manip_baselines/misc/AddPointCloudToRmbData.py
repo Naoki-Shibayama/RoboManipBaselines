@@ -15,6 +15,7 @@ from robo_manip_baselines.common.utils.Vision3dUtils import (
     crop_pointcloud_bb,
     downsample_pointcloud_fps,
     rotate_pointcloud,
+    voxelize_pointcloud_for_dspv2,
 )
 
 
@@ -69,6 +70,12 @@ def parse_argument():
         help="number of points in a point cloud",
     )
     parser.add_argument(
+        "--voxel_size",
+        type=float,
+        default=1.0,
+        help="voxel size of pointcloud. 1.0 means no voxelize",
+    )
+    parser.add_argument(
         "--overwrite",
         action="store_true",
         help="whether to overwrite existing value if it exists",
@@ -87,6 +94,7 @@ class AddPointCloudToRmbData:
         max_bound=None,
         rpy_angle=None,
         num_points=512,
+        voxel_size=1.0,
         overwrite=False,
     ):
         self.path = path
@@ -96,6 +104,7 @@ class AddPointCloudToRmbData:
         self.max_bound = max_bound
         self.rpy_angle = rpy_angle
         self.num_points = num_points
+        self.voxel_size = voxel_size
         self.overwrite = overwrite
 
     def run(self):
@@ -128,6 +137,7 @@ class AddPointCloudToRmbData:
                 rmb_data.attrs[pc_key + "_min_bound"] = self.min_bound
                 rmb_data.attrs[pc_key + "_max_bound"] = self.max_bound
                 rmb_data.attrs[pc_key + "_rpy_angle"] = self.rpy_angle
+                rmb_data.attrs[pc_key + "_voxel_size"] = self.voxel_size
 
     def get_pointclouds(self, rmb_data):
         pointclouds = []
@@ -144,6 +154,9 @@ class AddPointCloudToRmbData:
                 pointcloud = rotate_pointcloud(pointcloud, rotmat)
                 pointcloud = crop_pointcloud_bb(
                     pointcloud, self.min_bound, self.max_bound
+                )
+                _, pointcloud = voxelize_pointcloud_for_dspv2(
+                    pointcloud, self.voxel_size
                 )
                 pointcloud = downsample_pointcloud_fps(pointcloud, self.num_points)
 
@@ -177,6 +190,9 @@ class AddPointCloudToRmbData:
                 pointcloud = rotate_pointcloud(pointcloud, rotmat)
                 pointcloud = crop_pointcloud_bb(
                     pointcloud, self.min_bound, self.max_bound
+                )
+                _, pointcloud = voxelize_pointcloud_for_dspv2(
+                    pointcloud, self.voxel_size
                 )
                 pointcloud = downsample_pointcloud_fps(pointcloud, self.num_points)
 
