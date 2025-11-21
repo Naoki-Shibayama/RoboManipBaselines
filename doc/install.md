@@ -136,7 +136,7 @@ $ pip install -e .
 > ```
 
 ### [DSPv2](../robo_manip_baselines/policy/dspv_2)
-Install dependent libraries including [MinkowskiEngine](https://github.com/NVIDIA/MinkowskiEngine):
+Install dependent libraries including [DSPv2](https://github.com/Selen-Suyue/DSPv2):
 ```console
 $ sudo apt install -y build-essential python3-dev libopenblas-dev
 
