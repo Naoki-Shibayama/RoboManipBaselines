@@ -95,6 +95,39 @@ $ pip install -e .
 > $ PYTORCH3D_FORCE_NO_CUDA=1 pip install -e .
 > ```
 
+### [Diffusion policy with AnyTouch](../robo_manip_baselines/policy/diffusion_policy_with_any_touch)
+Install dependent libraries including [diffusion policy](https://github.com/real-stanford/diffusion_policy):
+```console
+$ sudo apt install -y libosmesa6-dev libgl1-mesa-glx libglfw3 patchelf
+
+# Go to the top directory of this repository
+$ pip install -e .[diffusion-policy]
+$ pip install -e .[anytouch]
+
+# Go to the top directory of this repository
+$ cd third_party/diffusion_policy
+$ pip install -e .
+```
+
+> [!NOTE]
+> If you encounter the following error,
+> ```python
+> pip._vendor.packaging.requirements.InvalidRequirement: Expected end or semicolon (after version specifier)
+>     opencv-python>=3.
+> ```
+> replace all `opencv-python>=3.` with `opencv-python>=3.0` in `<venv_directory>/lib/python3.8/site-packages/gym-0.21.0-py3.8.egg-info/requires.txt`.
+
+Copy config file and pre-trained checkpoint of [AnyTouch](github.com/GeWu-Lab/AnyTouch):
+```console
+# Go to the top directory of this repository
+# Download pre-trained AnyTouch checkpoint from [this link](https://drive.google.com/file/d/1L4jGUjIHNBMzOiD33Rv0jxWYKHBORD1R/view?usp=sharing)
+$ mv (checkpoint_location_dir)/checkpoint.pth robo_manip_baselines/common/models/checkpoints/anytouch.pth
+
+# Go to the top directory of this repository
+$ cp third_patry/AnyTouch/CLIP-ViT-L-14-DataComp.XL-s13B-b90K/config.json robo_manip_baselines/common/models/configs/AnyTouchConfig.json
+
+```
+
 ### [Flow policy](../robo_manip_baselines/policy/flow_policy)
 Install dependent libraries including [FlowPolicy](https://github.com/zql-kk/FlowPolicy):
 ```console
