@@ -92,7 +92,7 @@ class DatasetBase(torch.utils.data.Dataset):
                 action += self.model_meta_info["action"]["aug_std"] * torch.randn_like(
                     action
                 )
-        if images is not None:
+        if images is not None and len(images) > 0:
             if images.ndim < 3:
                 raise ValueError(
                     f"[{self.__class__.__name__}] Input must have at least 3 dimensions (C, H, W)"

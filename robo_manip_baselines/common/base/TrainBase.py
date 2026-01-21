@@ -91,7 +91,7 @@ class TrainBase(ABC):
         parser.add_argument(
             "--camera_names",
             type=str,
-            nargs="+",
+            nargs="*",
             default=["front"],
             help="camera names",
         )
