@@ -99,11 +99,11 @@ class TactoSawyerEnvBase(EnvDataMixin, gym.Env, ABC):
         self.setup_camera()
         self.setup_task_specific_object()
 
+        self.world_random_scale = None
         self.reset()
 
         # Setup environment parameters
         self.dt = 0.02  # [s]
-        self.world_random_scale = None
 
         p.setGravity(0, 0, -9.8)
         p.setTimeStep(self.dt)
@@ -137,12 +137,12 @@ class TactoSawyerEnvBase(EnvDataMixin, gym.Env, ABC):
                     path.dirname(__file__), "../assets/common/robots/sawyer/sawyer.urdf"
                 ),
                 arm_root_pose=self.get_link_pose("right_j0"),
-                ik_eef_joint_id=8,
-                arm_joint_idxes=np.arange(8),
-                gripper_joint_idxes=np.array([8]),
+                ik_eef_joint_id=7,
+                arm_joint_idxes=np.arange(7),
+                gripper_joint_idxes=np.array([7]),
                 gripper_joint_idxes_in_gripper_joint_pos=np.array([0]),
                 eef_idx=0,
-                init_arm_joint_pos=self.init_qpos[0:8],
+                init_arm_joint_pos=self.init_qpos[0:7],
                 init_gripper_joint_pos=np.array([0.005]),
             )
         ]
@@ -232,17 +232,20 @@ class TactoSawyerEnvBase(EnvDataMixin, gym.Env, ABC):
     def _set_actions(self, action):
         gripper_joint_pos = action[-1]
         tacto_action = np.concatenate(
-            (action[:8], np.array([-1 * gripper_joint_pos, gripper_joint_pos]))
+            (action[:7], np.array([gripper_joint_pos, -1 * gripper_joint_pos]))
         )
         if self.robot.torque_control:
             self.robot.set_joint_torque(tacto_action)
         else:
-            self.robot.set_joint_position(tacto_action)
+            max_forces = np.ones(self.robot.num_dofs) * 200
+            max_forces[-2:] = 20
+            self.robot.set_joint_position(
+                tacto_action, max_forces, use_joint_effort_limits=False
+            )
 
     def _get_obs(self):
         arm_joint_name_list = [
             "right_j0",
-            "head_pan",
             "right_j1",
             "right_j2",
             "right_j3",

@@ -16,7 +16,6 @@ class TactoSawyerGraspEnv(TactoSawyerEnvBase):
             np.array(
                 [
                     0,
-                    0,
                     -1.24,
                     -0.58,
                     2.18,

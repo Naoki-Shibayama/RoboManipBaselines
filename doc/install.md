@@ -209,7 +209,7 @@ Downgrade MuJoCo:
 $ pip install mujoco==2.3.7
 ```
 
-### [TACTO enviroments](../robo_manip_baselines/envs/tacto)
+### [TACTO environments](../robo_manip_baselines/envs/tacto)
 Install dependent libraries including [tacto](https://github.com/facebookresearch/tacto):
 ```console
 # Go to the top directory of this repository
