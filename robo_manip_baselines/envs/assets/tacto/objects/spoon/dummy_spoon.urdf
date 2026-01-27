@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<robot name="dummy_spoon.urdf">
+  <link name="spoon">
+  <!-- handle -->
+    <visual>
+      <geometry>
+        <cylinder radius="0.08" length="0.7"/>
+      </geometry>
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder radius="0.08" length="0.7"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.01"/>
+      <inertia ixx="1.0" iyy="1.0" izz="1.0" ixy="0" ixz="0" iyz="0"/>
+    </inertial>
+    <!-- bowl -->
+    <visual>
+      <origin xyz="0 0 -0.3" rpy="0 0 0"/>
+      <geometry>
+        <sphere radius="0.17"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 -0.3" rpy="0 0 0"/>
+      <geometry>
+        <sphere radius="0.17"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 -0.3" rpy="0 0 0"/>
+      <mass value="0.02"/>
+      <inertia ixx="1.0" iyy="1.0" izz="1.0" ixy="0" ixz="0" iyz="0"/>
+    </inertial>
+  </link>
+</robot>
