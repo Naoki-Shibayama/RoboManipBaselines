@@ -4,16 +4,16 @@
   <!-- handle -->
     <visual>
       <geometry>
-        <cylinder radius="0.08" length="0.7"/>
+        <box size="0.08 0.16 0.7"/>
       </geometry>
     </visual>
     <collision>
       <geometry>
-        <cylinder radius="0.08" length="0.7"/>
+        <box size="0.08 0.16 0.7"/>
       </geometry>
     </collision>
     <inertial>
-      <mass value="0.01"/>
+      <mass value="0.02"/>
       <inertia ixx="1.0" iyy="1.0" izz="1.0" ixy="0" ixz="0" iyz="0"/>
     </inertial>
     <!-- bowl -->
@@ -31,7 +31,7 @@
     </collision>
     <inertial>
       <origin xyz="0 0 -0.3" rpy="0 0 0"/>
-      <mass value="0.02"/>
+      <mass value="0.03"/>
       <inertia ixx="1.0" iyy="1.0" izz="1.0" ixy="0" ixz="0" iyz="0"/>
     </inertial>
   </link>
