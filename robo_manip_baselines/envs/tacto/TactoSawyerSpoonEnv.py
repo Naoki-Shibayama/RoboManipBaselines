@@ -1,6 +1,7 @@
 from os import path
 
 import numpy as np
+import pybullet as p
 import pybulletX as px
 
 from .TactoSawyerEnvBase import Camera, TactoSawyerEnvBase
@@ -15,13 +16,13 @@ class TactoSawyerSpoonEnv(TactoSawyerEnvBase):
             self,
             np.array(
                 [
-                    0,
-                    -0.9,
-                    -0.45,
-                    1.4,
-                    0.27,
-                    1.2,
-                    1.2,
+                    0.1,
+                    -1.37,
+                    -0.68,
+                    1.7,
+                    0.2,
+                    1.3,
+                    1.1,
                     -0.02,
                     0.02,
                 ]
@@ -36,14 +37,12 @@ class TactoSawyerSpoonEnv(TactoSawyerEnvBase):
             roll=0,
         )
 
-        self.start_obj_pos_offsets = np.array(
+        self.spoon_positions = np.array([[0.82, -0.03, 0.14], [0.78, -0.02, 0.25]])
+
+        self.spoon_orientations_rpy = np.array(
             [
-                [-0.3, 0, 0],
-                [-0.2, 0, 0],
-                [-0.1, 0, 0],
-                [0, 0, 0],
-                [0.1, 0, 0],
-                [0.2, 0, 0],
+                [np.deg2rad(-90), 0, np.deg2rad(180)],
+                [np.deg2rad(90), 0, np.deg2rad(15)],
             ]
         )
 
@@ -51,31 +50,31 @@ class TactoSawyerSpoonEnv(TactoSawyerEnvBase):
         self.box_scaling = 0.4
         self.spoon = px.Body(
             urdf_path=path.join(
-                path.dirname(__file__), "../assets/tacto/objects/spoon/dummy_spoon.urdf"
+                path.dirname(__file__), "../assets/tacto/objects/spoon/spoon.urdf"
             ),
-            base_position=[0.7, 0, 0.2],
-            base_orientation=[0, -0.5, 0, 1],
-            global_scaling=0.2,
+            base_position=[0.75, 0.1, 0.2],
+            base_orientation=[-1.0, -0.4, -0, 1],
+            global_scaling=0.1,
         )
         self.start_box = px.Body(
             urdf_path=path.join(
                 path.dirname(__file__), "../assets/tacto/objects/box/white_box.urdf"
             ),
-            base_position=[0.8, 0, 0.08],
+            base_position=[0.8, 0, 0.1],
             global_scaling=self.box_scaling,
         )
         self.green_box = px.Body(
             urdf_path=path.join(
                 path.dirname(__file__), "../assets/tacto/objects/box/green_box.urdf"
             ),
-            base_position=[0.8, -0.5, 0.08],
+            base_position=[0.8, -0.3, 0.1],
             global_scaling=self.box_scaling,
         )
         self.blue_box = px.Body(
             urdf_path=path.join(
                 path.dirname(__file__), "../assets/tacto/objects/box/blue_box.urdf"
             ),
-            base_position=[0.8, 0.5, 0.08],
+            base_position=[0.8, 0.3, 0.1],
             global_scaling=self.box_scaling,
         )
 
@@ -90,13 +89,13 @@ class TactoSawyerSpoonEnv(TactoSawyerEnvBase):
 
     def _get_reward(self):
         (x, y, z), _ = self.spoon.get_base_pose()
-        goal_height = 0.3 * self.box_scaling
+        goal_height = 0.75 * self.box_scaling
         for box in self.goal_boxes:
             (bx, by, _), _ = box.get_base_pose()
-            bx_min = bx - (0.225 * self.box_scaling)
-            bx_max = bx + (0.225 * self.box_scaling)
-            by_min = by - (0.225 * self.box_scaling)
-            by_max = by + (0.225 * self.box_scaling)
+            bx_min = bx - (0.3 * self.box_scaling)
+            bx_max = bx + (0.3 * self.box_scaling)
+            by_min = by - (0.3 * self.box_scaling)
+            by_max = by + (0.3 * self.box_scaling)
             if (
                 z < goal_height
                 and (bx_min < x and x < bx_max)
@@ -108,18 +107,24 @@ class TactoSawyerSpoonEnv(TactoSawyerEnvBase):
     def modify_world(self, world_idx=None, cumulative_idx=None):
         """Modify simulation world depending on world index."""
         if world_idx is None:
-            world_idx = cumulative_idx % len(self.start_obj_pos_offsets)
+            world_idx = cumulative_idx % len(self.spoon_orientations)
+
+        spoon_pos = self.spoon_positions[world_idx]
+        spoon_ori = p.getQuaternionFromEuler(self.spoon_orientations_rpy[world_idx])
+        self.spoon.set_base_pose(spoon_pos, spoon_ori)
+        self.start_box.set_base_pose(
+            self.start_box.init_base_position, self.start_box.init_base_orientation
+        )
 
         if self.world_random_scale is not None:
             rand_offset = np.random.uniform(
                 low=-1.0 * self.world_random_scale, high=self.world_random_scale, size=3
             )
-        else:
-            rand_offset = np.zeros(3)
 
-        for obj in [self.spoon, self.start_box]:
-            pos = obj.init_base_position.copy()
-            pos += self.start_obj_pos_offsets[world_idx] + rand_offset
-            obj.set_base_pose(pos, obj.init_base_orientation)
+            spoon_pos += rand_offset
+            self.spoon.set_base_pose(spoon_pos, spoon_ori)
+            box_pos = self.start_box.init_base_position.copy()
+            box_pos += rand_offset
+            self.start_box.set_base_pose(box_pos, self.start_box.init_base_orientation)
 
         return world_idx

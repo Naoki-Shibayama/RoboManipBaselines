@@ -5,16 +5,16 @@
   </material>
   <link name="bottom">
     <visual>
-      <origin xyz="0 0 -0.15"/>
+      <origin xyz="0 0 -0.2"/>
       <geometry>
-        <box size="0.5 0.5 0.1"/>
+        <box size="0.3 0.3 0.1"/>
       </geometry>
       <material name="white"/>
     </visual>
     <collision>
       <origin xyz="0 0 -0.15"/>
       <geometry>
-        <box size="0.5 0.5 0.1"/>
+        <box size="0.3 0.3 0.1"/>
       </geometry>
     </collision>
     <inertial>
@@ -25,13 +25,13 @@
   <link name="edge_nx">
     <visual>
       <geometry>
-        <box size="0.05 0.5 0.2"/>
+        <box size="0.025 0.3 0.5"/>
       </geometry>
       <material name="white"/>
     </visual>
     <collision>
       <geometry>
-        <box size="0.05 0.5 0.2"/>
+        <box size="0.025 0.3 0.5"/>
       </geometry>
     </collision>
     <inertial>
@@ -42,13 +42,13 @@
   <link name="edge_px">
     <visual>
       <geometry>
-        <box size="0.05 0.5 0.2"/>
+        <box size="0.025 0.3 0.5"/>
       </geometry>
       <material name="white"/>
     </visual>
     <collision>
       <geometry>
-        <box size="0.05 0.5 0.2"/>
+        <box size="0.025 0.3 0.5"/>
       </geometry>
     </collision>
     <inertial>
@@ -59,13 +59,13 @@
   <link name="edge_ny">
     <visual>
       <geometry>
-        <box size="0.5 0.05 0.2"/>
+        <box size="0.3 0.025 0.5"/>
       </geometry>
       <material name="white"/>
     </visual>
     <collision>
       <geometry>
-        <box size="0.5 0.05 0.2"/>
+        <box size="0.3 0.025 0.5"/>
       </geometry>
     </collision>
     <inertial>
@@ -76,13 +76,13 @@
   <link name="edge_py">
     <visual>
       <geometry>
-        <box size="0.5 0.05 0.2"/>
+        <box size="0.3 0.025 0.5"/>
       </geometry>
       <material name="white"/>
     </visual>
     <collision>
       <geometry>
-        <box size="0.5 0.05 0.2"/>
+        <box size="0.3 0.025 0.5"/>
       </geometry>
     </collision>
     <inertial>
@@ -92,22 +92,22 @@
   </link>
 
   <joint name="edge_joint_nx" type="fixed">
-    <origin xyz="-0.225 0 0"/>
+    <origin xyz="-0.1455 0 0"/>
     <parent link="bottom"/>
     <child link="edge_nx"/>
   </joint>
   <joint name="edge_joint_px" type="fixed">
-    <origin xyz="0.225 0 0"/>
+    <origin xyz="0.1455 0 0"/>
     <parent link="bottom"/>
     <child link="edge_px"/>
   </joint>
   <joint name="edge_joint_ny" type="fixed">
-    <origin xyz="0 -0.225 0"/>
+    <origin xyz="0 -0.1455 0"/>
     <parent link="bottom"/>
     <child link="edge_ny"/>
   </joint>
   <joint name="edge_joint_py" type="fixed">
-    <origin xyz="0 0.225 0"/>
+    <origin xyz="0 0.1455 0"/>
     <parent link="bottom"/>
     <child link="edge_py"/>
   </joint>

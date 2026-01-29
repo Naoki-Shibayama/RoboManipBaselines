@@ -1,4 +1,21 @@
 import gymnasium as gym
+import numpy as np
+import pinocchio as pin
+
+from robo_manip_baselines.common import ReachPhaseBase
+
+
+def get_target_se3(op, pos_z):
+    target_pos = np.array([-0.5, -0.11, 0.5])
+    target_pos[2] = pos_z
+    return pin.SE3(np.array([[0, 1, 0], [1, 0, 0], [0, 0, -1]]), target_pos)
+
+
+class ReachPhase(ReachPhaseBase):
+    def set_target(self):
+        self.target_se3 = get_target_se3(self.op, pos_z=0.7)
+
+        self.duration = 0.4
 
 
 class OperationTactoSawyerSpoon:
@@ -9,4 +26,4 @@ class OperationTactoSawyerSpoon:
         )
 
     def get_pre_motion_phases(self):
-        return []
+        return [ReachPhase(self)]
