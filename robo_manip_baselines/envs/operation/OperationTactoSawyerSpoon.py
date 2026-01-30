@@ -6,7 +6,7 @@ from robo_manip_baselines.common import ReachPhaseBase
 
 
 def get_target_se3(op, pos_z):
-    target_pos = np.array([-0.5, -0.11, 0.5])
+    target_pos = np.array([-0.5, 0.11, 0.5])
     target_pos[2] = pos_z
     return pin.SE3(np.array([[0, 1, 0], [1, 0, 0], [0, 0, -1]]), target_pos)
 

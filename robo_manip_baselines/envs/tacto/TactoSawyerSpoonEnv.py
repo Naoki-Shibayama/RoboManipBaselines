@@ -37,12 +37,12 @@ class TactoSawyerSpoonEnv(TactoSawyerEnvBase):
             roll=0,
         )
 
-        self.spoon_positions = np.array([[0.82, -0.03, 0.14], [0.78, -0.02, 0.25]])
+        self.spoon_positions = np.array([[0.82, -0.04, 0.3], [0.82, -0.04, 0.3]])
 
         self.spoon_orientations_rpy = np.array(
             [
-                [np.deg2rad(-90), 0, np.deg2rad(180)],
-                [np.deg2rad(90), 0, np.deg2rad(15)],
+                [np.deg2rad(180), np.deg2rad(60), np.deg2rad(90)],
+                [np.deg2rad(180), np.deg2rad(-60), np.deg2rad(-90)],
             ]
         )
 
@@ -54,7 +54,7 @@ class TactoSawyerSpoonEnv(TactoSawyerEnvBase):
             ),
             base_position=[0.75, 0.1, 0.2],
             base_orientation=[-1.0, -0.4, -0, 1],
-            global_scaling=0.1,
+            global_scaling=0.06,
         )
         self.start_box = px.Body(
             urdf_path=path.join(
@@ -109,7 +109,7 @@ class TactoSawyerSpoonEnv(TactoSawyerEnvBase):
         if world_idx is None:
             world_idx = cumulative_idx % len(self.spoon_orientations)
 
-        spoon_pos = self.spoon_positions[world_idx]
+        spoon_pos = self.spoon_positions[world_idx].copy()
         spoon_ori = p.getQuaternionFromEuler(self.spoon_orientations_rpy[world_idx])
         self.spoon.set_base_pose(spoon_pos, spoon_ori)
         self.start_box.set_base_pose(
